@@ -1,0 +1,228 @@
+SET SERVEROUTPUT ON;
+--GR. F
+--ZADANIA NA KOLOKWIUM
+ 
+--Data: 18.06.2016
+--Imiê:
+--Nazwisko:
+--Semestr: IV
+--Specjalnoœæ: Multimedia i grafika
+ 
+ 
+--UZUPE£NIJ ROZWI¥ZANIA ZADAÑ I TESTY POPRAWNOŒCI.
+ 
+ 
+ 
+ 
+ 
+ 
+--F1. Dana jest tabela: CREATE TABLE liczby(liczba INT);
+--Napisaæ procedurê o nazwie wpisz_parzyste(p_od,p_do), która
+--wpisze do tabeli liczby wszystkie liczby parzyste z przedzia³u <p_od,p_do>.
+--Napisaæ instrukcjê testuj¹c¹ dzia³anie utworzonej procedury.
+ 
+--Rozwi¹zanie [3 pkt]:
+ 
+CREATE TABLE liczby(liczba INT);
+ 
+CREATE OR REPLACE PROCEDURE wpisz_parzyste(
+  p_od INT,
+  p_do INT
+) IS
+BEGIN
+  FOR x IN p_od..p_do LOOP
+    IF (mod(x,2)=0) THEN
+      INSERT INTO liczby VALUES(x);
+    END IF;
+  END LOOP;
+END wpisz_parzyste;
+/
+ 
+--Test poprawnoœci rozwi¹zania [1 pkt]:
+ 
+EXECUTE wpisz_parzyste(1,15);
+ 
+ 
+--Usuwamy utworzon¹ procedurê [brak=-1pkt]:
+ 
+DROP PROCEDURE wpisz_parzyste;
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+--F2. W dowolnej procedurze sprowokuj i obs³u¿ wyj¹tek NO_DATA_FOUND.
+--Nie ma znaczenia co robi dana procedura.
+--Zademonstruj dzia³anie zaimplementowanej procedury.
+ 
+--Rozwi¹zanie [3 pkt]:
+CREATE TABLE liczby_except(id INT);
+INSERT INTO liczby_except values(1);
+ 
+CREATE OR REPLACE PROCEDURE wybierz_liczbe(id_v INT)
+IS
+BEGIN
+  DECLARE
+    row_select INT;
+  BEGIN
+    SELECT id INTO row_select from liczby_except where id=id_v;
+    DBMS_OUTPUT.PUT_LINE('id='||row_select);
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RAISE_APPLICATION_ERROR(-20001,'BRAK LICZBY');
+  END;
+END wybierz_liczbe;
+ 
+ 
+--Test poprawnoœci rozwi¹zania nie prowokuj¹cy wyj¹tku [0,5 pkt]:
+ 
+EXECUTE wybierz_liczbe(1);
+ 
+--Test poprawnoœci rozwi¹zania prowokuj¹cy wyj¹tek [0,5 pkt]:
+ 
+EXECUTE wybierz_liczbe(1002);
+ 
+ 
+--Usuwamy utworzon¹ procedurê [brak=-1 pkt]:
+ 
+DROP PROCEDURE wybierz_liczbe;
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+--F3. Napisaæ funkcjê posiadaj¹c¹ jeden parametr p_data i zwracaj¹c¹
+--iloœæ dni, która up³ynê³a od zadanej daty.
+--Zademonstruj dzia³anie zaimplementowanej funkcji.
+ 
+--Rozwi¹zanie [3 pkt]:
+CREATE OR REPLACE FUNCTION ile_dni(
+  p_data DATE
+) RETURN INTEGER IS
+BEGIN
+    RETURN sysdate-p_data-1;
+END;
+/
+ 
+--Test poprawnoœci rozwi¹zania [1 pkt]:
+BEGIN
+  DBMS_OUTPUT.PUT_LINE(ile_dni(TO_DATE('2016-06-11')));
+END;
+/
+--Usuwamy utworzon¹ funkcjê [brak=-1 pkt]:
+ 
+DROP FUNCTION ile_dni;
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+--F4. Rozwi¹zania zadañ F1-F3 umieœæ w pakiecie i zademonstruj, ¿e
+--dzia³aj¹ wszystkie funkcje i procedury w utworzonym pakiecie.
+--Dodatkowo przeci¹¿ dowolnie wybran¹ funkcjê lub procedurê.
+ 
+--Rozwi¹zanie [2+1(za przeci¹¿enie) pkt]:
+ 
+CREATE OR REPLACE PACKAGE funkcje IS
+  PROCEDURE wpisz_parzyste;
+  PROCEDURE wybierz_liczbe;
+  FUNCTION ile_dni RETURN INTEGER;
+END funkcje;
+ 
+CREATE OR REPLACE PACKAGE BODY funkcje IS
+  PROCEDURE wpisz_parzyste(
+    p_od INT,
+    p_do INT
+  ) IS
+  BEGIN
+    FOR x IN p_od..p_do LOOP
+      IF (mod(x,2)=0) THEN
+        INSERT INTO liczby VALUES(x);
+      END IF;
+    END LOOP;
+  END wpisz_parzyste;
+ 
+  PROCEDURE wybierz_liczbe(id_v INT)
+  IS
+  BEGIN
+    DECLARE
+      row_select INT;
+    BEGIN
+      SELECT id INTO row_select from liczby_except where id=id_v;
+      DBMS_OUTPUT.PUT_LINE('id='||row_select);
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001,'BRAK LICZBY');
+    END;
+  END wybierz_liczbe;
+ 
+  FUNCTION ile_dni(
+    p_data DATE
+  ) RETURN INTEGER IS
+  BEGIN
+      RETURN sysdate-p_data-1;
+  END ile_dni;
+END funkcje;
+ 
+ 
+--Test poprawnoœci rozwi¹zania (uruchom wszystkie funkcje i procedury z pakietu) [1 pkt]:
+ 
+BEGIN
+  EXECUTE funkcje.wpisz_parzyste(40,45);
+  DBMS_OUTPUT.PUT_LINE(funkcje.ile_dni(TO_DATE('2016-06-11')));
+END;
+ 
+ 
+--Usuwamy utworzony pakiet (ca³kowicie) [brak=-1 pkt]:
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+--F5. Dana jest tabela osoba(id_osoba,nazwisko,data_urodzenia).
+--Napisaæ wyzwalacz, który uniemo¿liwi wpisanie nazwiska krótszego
+--ni¿ 3 znaki.
+--Nie mo¿na u¿ywaæ ograniczenia CHECK [inaczej=-4 pkt].
+ 
+--Rozwi¹zanie
+--Tworzymy tabele i dodajemy 4 rekordy do tabeli osoba [brak=-1 pkt]:
+ 
+CREATE TABLE osoba(id_osoba INT,nazwisko VARCHAR2(30),data_urodzenia DATE);
+INSERT INTO osoba values(1, 'Nowak', to_date('1914-02-18'));
+INSERT INTO osoba values(2, 'Kowalski', to_date('1936-07-11'));
+INSERT INTO osoba values(3, 'Ssak', to_date('1984-08-22'));
+INSERT INTO osoba values(4, 'Kaczor', to_date('1974-03-14'));
+ 
+ 
+ 
+--Tworzymy wyzwalacz [3 pkt]:
+ 
+CREATE OR REPLACE TRIGGER wyzwalacz BEFORE
+  INSERT ON osoba FOR EACH ROW
+BEGIN
+  IF length(:New.nazwisko)<3 THEN
+      RAISE_APPLICATION_ERROR(-20001,'ZBYT KROTKIE NAZWISKO');
+  END IF;
+END;
+/
+ 
+--Testujemy poprawnoœæ wyzwalacza [1 pkt]:
+ 
+INSERT INTO osoba values(5, 'Kaczorek', to_date('1974-03-14'));
+INSERT INTO osoba values(6, 'ja', to_date('1974-03-14'));
+ 
+ 
+--Usuwamy wyzwalacz i tabelê [brak=-1 pkt]:
+ 
+DROP TRIGGER wyzwalacz;
+DROP TABLE osoba;

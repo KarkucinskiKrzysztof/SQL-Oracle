@@ -1,8 +1,2 @@
 # User-specific files
 
-Temp/*
-.idea/*
-out/*
-iml.*
-Library.iml
-sqlite-jdbc-3.8.11.2*

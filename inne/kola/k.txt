@@ -1,0 +1,136 @@
+SET serveroutput ON
+--K1. Wylosuj 6 ró¿nych liczb ca³kowitych z przedzia³u od 1 do 49.
+--U¿yj kolekcji. Wypisz wylosowane liczby na ekranie.
+--Rozwi¹zanie umieœæ w procedurze.
+--Zademonstruj dzia³anie zaimplementowanej procedury.
+--Rozwi¹zanie:
+CREATE OR REPLACE PROCEDURE losowanie(p_od int, p_do int)
+IS
+  TYPE t_liczb IS TABLE OF int
+    INDEX BY PLS_INTEGER;
+v_liczby t_liczb;
+BEGIN
+  DBMS_OUTPUT.put_line('szeœæ ró¿nych liczb ca³kowitych z zadanego przedzia³u:');
+  DBMS_RANDOM.seed (TO_CHAR(SYSDATE,'MM-DD-YYYY HH24:MI:SS'));
+  FOR i IN 1 ..6 LOOP
+    v_liczby(i) := ROUND(DBMS_RANDOM.VALUE(low => p_od, high => p_do));
+    DBMS_OUTPUT.put_line(TO_CHAR(v_liczby(i)));
+  END LOOP;
+END;
+/
+--Test poprawnoœci rozwi¹zania:
+exec losowanie(1,49);
+DROP PROCEDURE losowanie;
+--K2. W dowolnej funkcji obs³u¿ wyj¹tek: NO_DATA_FOUND.
+--Nie ma znaczenia co robi dana funkcji.
+--Zademonstruj dzia³anie zaimplementowanej funkcji.
+--Rozwi¹zanie:
+ 
+--Test poprawnoœci rozwi¹zania nie prowokuj¹cy wyj¹tku:
+ 
+--Test poprawnoœci rozwi¹zania prowokuj¹cy wyj¹tek:
+ 
+--K3. Napisaæ procedurê wypisuj¹c¹ n pierwszych wyrazów ci¹gu Fibbonacciego,
+--gdzie n jest parametrem procedury.
+--Wzór: f(0)=0, f(1)=1, f( n )=f(n-1)+f(n-2).
+--Zademonstruj dzia³anie zaimplementowanej procedury.
+--Rozwi¹zanie:
+CREATE OR REPLACE PROCEDURE ciag_fibbonacciego(n NUMBER)IS
+fib1 NUMBER := 0;
+fib2 NUMBER := 1;
+fib3 NUMBER;
+licznik NUMBER DEFAULT 0;
+temp NUMBER;
+BEGIN
+  DBMS_OUTPUT.put_line(fib1);
+  DBMS_OUTPUT.put_line(fib2);
+  WHILE licznik != n-2
+    LOOP
+      fib3 := fib1 + fib2;
+      DBMS_OUTPUT.put_line(fib3);
+      temp := fib2;
+      fib2 := fib3;
+      fib1 := temp;
+      licznik := licznik + 1;
+    END LOOP;
+END;
+/
+--Test poprawnoœci rozwi¹zania:
+exec ciag_fibbonacciego(15);
+DROP PROCEDURE ciag_fibbonacciego;
+--K4. Rozwi¹zania zadañ K1-K3 umieœæ w pakiecie i zademonstruj, ¿e
+--dzia³aj¹ wszystkie funkcje i procedury w utworzonym pakiecie.
+--Rozwi¹zanie:
+CREATE OR REPLACE PACKAGE kolokwium
+AS
+    PROCEDURE  losowanie(p_od int, p_do int);
+    PROCEDURE ciag_fibbonacciego(n NUMBER);
+END;
+/
+CREATE OR REPLACE PACKAGE BODY kolokwium
+IS
+    PROCEDURE losowanie(p_od int, p_do int)
+    IS
+    TYPE t_liczb IS TABLE OF int
+      INDEX BY PLS_INTEGER;
+    v_liczby t_liczb;
+    BEGIN
+      DBMS_OUTPUT.put_line('szeœæ ró¿nych liczb ca³kowitych z zadanego przedzia³u:');
+      DBMS_RANDOM.seed (TO_CHAR(SYSDATE,'MM-DD-YYYY HH24:MI:SS'));
+      FOR i IN 1 ..6 LOOP
+        v_liczby(i) := ROUND(DBMS_RANDOM.VALUE(low => p_od, high => p_do));
+        DBMS_OUTPUT.put_line(TO_CHAR(v_liczby(i)));
+      END LOOP;
+    END losowanie;
+   
+    PROCEDURE ciag_fibbonacciego(n NUMBER)
+    IS
+      fib1 NUMBER := 0;
+      fib2 NUMBER := 1;
+      fib3 NUMBER;
+      licznik NUMBER DEFAULT 0;
+      temp NUMBER;
+    BEGIN
+      DBMS_OUTPUT.put_line(fib1);
+      DBMS_OUTPUT.put_line(fib2);
+      WHILE licznik != n-2
+        LOOP
+          fib3 := fib1 + fib2;
+          DBMS_OUTPUT.put_line(fib3);
+          temp := fib2;
+          fib2 := fib3;
+          fib1 := temp;
+          licznik := licznik + 1;
+        END LOOP;
+    END ciag_fibbonacciego;
+END kolokwium;
+/
+--Test poprawnoœci rozwi¹zania:
+exec kolokwium.losowanie(1,49);
+exec kolokwium.ciag_fibbonacciego(15);
+--K5. Dana jest tabela imiona(id,imie) oraz tabela imiona_usuniete(id,imie,data).
+--Napisaæ wyzwalacz, który usuniête imiona z tabeli imiona zapisze w tabeli
+--imiona_usuniete razem z dat¹ usuniêcia:
+--Rozwi¹zanie
+--Etap 1: Tworzymy tabele i dodajemy dane:
+DROP TABLE imiona;
+DROP TABLE imiona_usuniete;
+CREATE TABLE imiona(id int, imie VARCHAR(20));
+CREATE TABLE imiona_usuniete(id int, imie VARCHAR(20), data_usuniecia DATE);
+INSERT INTO imiona VALUES (1, 'Jacek');
+INSERT INTO imiona VALUES (2, 'Placek');
+INSERT INTO imiona VALUES (3, 'Józek');
+ 
+--Etap 2: Tworzymy wyzwalacz:
+CREATE OR REPLACE TRIGGER historia_imion
+  before DELETE OR UPDATE ON imiona
+  FOR each ROW
+BEGIN
+  IF deleting THEN
+    INSERT INTO imiona_usuniete VALUES (:old.id, :old.imie, SYSDATE);
+  END IF;
+END;
+/
+--Etap 3: Testujemy poprawnoœæ wyzwalacza
+DELETE FROM imiona WHERE id = 1;
+SELECT * FROM imiona_usuniete;

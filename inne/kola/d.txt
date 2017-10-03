@@ -1,0 +1,174 @@
+SET serveroutput ON
+--D1. Dana jest tabela: CREATE TABLE liczby_pierwsze(liczba INT);
+--Napisaæ procedurê o nazwie wpisz_liczby_pierwsze(p_od,p_do), która
+--wpisze do tabeli liczby_pierwsze wszystkie liczby pierwsze z przedzia³u
+--<p_od,p_do>.
+--Napisaæ instrukcjê testuj¹c¹ dzia³anie utworzonej procedury.
+--Rozwi¹zanie:
+ DROP TABLE liczby_pierwsze;
+ CREATE TABLE liczby_pierwsze(liczba int);
+ CREATE OR REPLACE PROCEDURE  wpisz_liczby_pierwsze(p_od int,p_do int)
+ IS
+ a INTEGER;
+ nie_jest_pierwsza BOOLEAN;
+ BEGIN
+ FOR j IN p_od..p_do LOOP
+    nie_jest_pierwsza := FALSE;
+    a:=(j/2);
+    FOR i IN 2..a LOOP
+        nie_jest_pierwsza:=(MOD(j,i)=0);
+        EXIT WHEN nie_jest_pierwsza;
+    END LOOP;
+    IF(NOT nie_jest_pierwsza) THEN
+        INSERT INTO liczby_pierwsze VALUES(J);
+    END IF;
+ END LOOP;
+ COMMIT;
+END;
+/
+--Test poprawnoœci rozwi¹zania:
+exec wpisz_liczby_pierwsze(5,28);
+SELECT * FROM liczby_pierwsze;
+ 
+--Usuwamy utworzon¹ procedurê:
+DROP PROCEDURE wpisz_liczby_pierwsze;
+DROP TABLE liczby_pierwsze;
+CREATE TABLE liczby_pierwsze(liczba int);
+ 
+--D2. W dowolnej procedurze obs³u¿ wyj¹tek CURSOR_ALREADY_OPEN.
+--Nie ma znaczenia co robi dana procedura.
+--Zademonstruj dzia³anie zaimplementowanej procedury.
+--Rozwi¹zanie:
+ 
+SET SERVEROUTPUT ON
+CREATE OR REPLACE PROCEDURE exception_test IS
+CURSOR c_kursor IS SELECT 'test wyjatku' FROM DUAL;
+BEGIN
+    OPEN c_kursor;
+    OPEN c_kursor;
+    CLOSE c_kursor;
+EXCEPTION
+    WHEN CURSOR_ALREADY_OPEN
+    THEN
+        DBMS_OUTPUT.PUT_LINE('wyj¹tek CURSOR_ALREADY_OPEN zosta³ wywo³any');
+        CLOSE c_kursor;
+END;
+/
+--Test poprawnoœci rozwi¹zania nie prowokuj¹cy wyj¹tku:
+exec exception_test;
+ 
+--D3. Napisaæ funkjê posiadaj¹c¹ jeden parametr p_data i zwracaj¹c¹
+--wartoœæ logiczn¹ okreœlaj¹c¹, czy zadana data by³a pi¹tkiem 13-go, czy
+--te¿ nie.
+--Zademonstruj dzia³anie zaimplentowanej funkcji.
+--Rozwi¹zanie:
+CREATE OR REPLACE FUNCTION czy_piatek(p_data DATE) RETURN BOOLEAN IS
+  BEGIN
+  IF TO_CHAR(p_data, 'd')=5 AND TO_CHAR(p_data,'dd')=13 THEN
+    RETURN TRUE;
+  ELSE
+    RETURN FALSE;
+  END IF;
+  COMMIT;
+END;
+/
+--Test poprawnoœci rozwi¹zania:
+BEGIN
+  IF (czy_piatek(CURRENT_DATE)) THEN
+    DBMS_OUTPUT.put_line('tak');
+  ELSE
+    DBMS_OUTPUT.put_line('nie');
+  END IF;
+END;
+/
+--Usuwamy utworzon¹ procedurê:
+DROP FUNCTION czy_piatek;
+--D4. Rozwi¹zania zadañ D1-D3 umieœæ w pakiecie i zademonstruj, ¿e
+--dzia³aj¹ wszystkie funkcje i procedury w utworzonym pakiecie.
+--Dodatkowo przeci¹¿ dowolnie wybran¹ funkcjê lub procedurê.
+--Rozwi¹zanie:
+CREATE OR REPLACE PACKAGE kolokwium
+AS
+    PROCEDURE  wpisz_liczby_pierwsze(p_od int,p_do int);
+    FUNCTION czy_piatek(p_data DATE) RETURN BOOLEAN;
+END;
+/
+CREATE OR REPLACE PACKAGE BODY kolokwium
+IS
+    PROCEDURE wpisz_liczby_pierwsze(p_od int,p_do int)
+    IS
+    a INTEGER;
+    nie_jest_pierwsza BOOLEAN;
+    BEGIN
+    FOR j IN p_od..p_do LOOP
+       nie_jest_pierwsza := FALSE;
+       a:=(j/2);
+       FOR i IN 2..a LOOP
+            nie_jest_pierwsza:=(MOD(j,i)=0);
+            EXIT WHEN nie_jest_pierwsza;
+        END LOOP;
+        IF(NOT nie_jest_pierwsza) THEN
+           INSERT INTO liczby_pierwsze VALUES(J);
+        END IF;
+    END LOOP;
+    END wpisz_liczby_pierwsze;
+   
+    FUNCTION czy_piatek(p_data DATE) RETURN BOOLEAN IS
+     BEGIN
+     IF TO_CHAR(p_data, 'd')=5 AND TO_CHAR(p_data,'dd')=13 THEN
+        RETURN TRUE;
+      ELSE
+       RETURN FALSE;
+     END IF;
+      COMMIT;
+    END czy_piatek;
+END kolokwium;
+/
+ 
+--Test poprawnoœci rozwi¹zania (uruchom wszystkie funkcje i procedury z pakietu):
+BEGIN
+  IF (kolokwium.czy_piatek(CURRENT_DATE)) THEN
+    DBMS_OUTPUT.put_line('tak');
+  ELSE
+    DBMS_OUTPUT.put_line('nie');
+  END IF;
+END;
+/
+exec kolokwium.wpisz_liczby_pierwsze(20,40);
+SELECT * FROM liczby_pierwsze;
+/
+--Usuwamy utworzony pakiet (ca³kowicie):
+DROP PACKAGE kolokwium;
+--D5. Dana jest tabela osoba(id_osoba,imie,pensja).
+--Napisaæ wyzwalacz, który uniemo¿liwi przypisanie wielkoœci pensji
+--spoza przedzia³u <1000z³,10000z³>.
+--Nie mo¿na u¿ywaæ ograniczenia CHECK.
+--Rozwi¹zanie
+--Tworzymy tabele i dodajemy 4 rekordy do tabeli osoba:
+DROP TABLE osoba;
+CREATE TABLE osoba(id_osoba int, imie VARCHAR2(10), pensja int);
+INSERT INTO osoba VALUES (1, 'Jacek', 1500);
+INSERT INTO osoba VALUES (2, 'Placek', 2500);
+INSERT INTO osoba VALUES (3, 'Franek', 3500);
+INSERT INTO osoba VALUES (4, 'Zdzisiek', 4500);
+ 
+--Tworzymy wyzwalacz:
+CREATE OR REPLACE TRIGGER sprawdza_pensje
+  before INSERT OR UPDATE ON osoba
+  FOR each ROW
+WHEN (NEW.id_osoba > 0)
+BEGIN
+    IF (:NEW.pensja < 1000 OR :NEW.pensja > 10000) THEN raise_application_error(-20501,'Pensja musi byc z przedzialu <1000,10000>!');
+    END IF;
+END;
+/
+--Testujemy poprawnoœæ wyzwalacza:
+INSERT INTO osoba VALUES (5, 'Kuba', 50);
+INSERT INTO osoba VALUES (6, '£ukasz', 500000);
+INSERT INTO osoba VALUES (7, 'Michal', 6000);
+SELECT * FROM osoba;
+/
+ 
+--Usuwamy wyzwalacz i tabelê:
+DROP TRIGGER sprawdza_pensje;
+DROP TABLE osoba;

@@ -1,0 +1,853 @@
+rekord (krotka) - pojedynczy wiersz w tabeli
+pole (atrybut) - jedna kratka pole w tabeli
+ID (ang identity) - to¿samoœæ
+klucz podstawowy, klucz g³ówny (ang primary key) - to jedno lub wiêcej pól których wartoœæ jednoznacznie identyfikuje ka¿dy rekord tabeli mo¿e to byæ IDKsiazki lub pesel u¿ytkownika
+SQL nie uwzglêdnia wielkoœci znaków
+Redundancja - powtórzenie
+Relacja - powi¹zanie logiczne wystêpuj¹ce pomiêdzy tabelami realizowane za pomoc¹ klucza podstawowego i klucza obcego
+klucz podstawowy, klucz obcy - przyk³adowo pole IDuczniaw tabeli uczniowie jest kluczem podstawowym, ale pole IDucznia w tabeli wypo¿yczenia to ju¿ klucz obcy
+DBMS - Database Management System - system zarz¹dzania baz¹ danych (MySQL, PosgreSQL, FireBird, ORACLE Database) 
+Rodzaje kwerend - wstawiaj¹ce wyszukuj¹ce zmieniaj¹ce usuwaj¹ce, zmieniaj¹ce strukture istniej¹cych juz tabel
+SQL - Structured Query Language strukturalny jêzyk zapytañ
+query - kwerenda, czyli zapytanie do bazy
+W bazach SQL istnieje mechanizm obrony klucza podstawowego który nie pozwala zmodyfikowaæ w tabeli  Primary Key na wartoœæ ju¿ istniej¹c¹
+Bardzo wa¿ne jest operowanie nawiasami ( ) podczas ustalania kryteriów w warunkach logicznych gdzie dzia³amy na OR i AND.  Operatory te maja ró¿ne priorytety i bez nawiasów wychodz¹ czasem dziwna rzeczy
+PL/SQL - Procedural Language / Structured Query Language
+
+
+
+kwerendy:
+SELECT * FROM nazwa_tabeli
+// wyœwietla ca³a tabele,  * symbolizuje wszystkie kolumny 
+
+SELECT nazwa_kolumny1, nazwa_kolumny2, nazwa_kolumny3 FROM nazwa_tabeli
+// wyœwietla trzy kolumny z tabeli nazwa_tabeli
+
+ SELECT * FROM nazwa_tabeli WHERE nazwa_kolumny1=15
+ // wyœwietli ca³y wiersz (wszystkie kolumny) gdzie nazwa_kolumny1=15
+ 
+ SELECT * FROM nazwa_tabeli WHERE nazwa_kolumny2="abc"
+ // podobniej jak z wy¿ej ale wszystkie pola tekstowe w sql musz¹ byæ w " "
+ 
+ SELECT * FROM nazwa_tabeli WHERE nazwa_kolumny2="abc" AND nazwa_kolumny1=15
+ // tak jak wy¿ej ale teraz s¹ dwa warunki jeden to kolumna1 musi byæ równa 15a kolumna2 musi mieæ ³añcuch "abc"   
+ // w SQL obowi¹zuj¹ warunki logiczne AND i OR
+ 
+ SELECT tresc,odpa,odpb,odpc,odpd FROM pytania WHERE rok=2010
+ // wyœwietla kolumny o nazwach tresc,odpa,odpb,odpc,odpd z tabeli pytania gdzie w tabeli rok pojawi³a siê wartoœæ 2010
+ 
+ SELECT * FROM pytania ORDER BY tresc ASC 
+ // wyœwietla wszystkie kolumny z tabeli pytania posortowane wed³ug tresc alfabetycznie
+ // DESC - descending (sortowanie  malej¹co)
+ // ASC - ascending (sortowanie rosn¹co)
+ 
+ SELECT tresc,id FROM pytania WHERE id<=12 AND id>=10 
+ SELECT tresc,id FROM pytania WHERE id BETWEEN 10 AND 12    // alternatywna wersja
+ // Wyœwietli kolumny treœæ i ID z tabeli pytania gdzie ID jest w przedziale 10-12 
+
+ SELECT * FROM pytania WHERE tresc LIKE "Jak%"
+ // Wyœwietla ca³ê wiersze gdzie w tabeli pytania, kolumnie tresc na pocz¹tku jest umieszczone s³owo Jak
+ // "%" zastêpuje cia znaków w SQL
+ // LIKE -podobny , wyglada jak
+ 
+ SELECT * FROM pytania WHERE tresc LIKE "%C++%" OR odpa LIKE "%C++%" OR odpb LIKE "%C++%" OR odpc LIKE "%C++%" OR odpd LIKE "%C++%"
+ // // Wyœwietla ca³e wiersze gdzie w tabeli pytania, kolumnie tresc lub kolumnach odpowiedzie jest zwrot C++
+ 
+ SELECT * FROM pytania WHERE (kategoria="programowanie" OR kategoria="sieci") AND rok 2012
+ // Wyœwietla wszystkie wiersze z roku 2012 ale tylko jeœli w kolumnie kategoria jest programowanie lub sieci
+ 
+
+
+
+
+ // ------------------------------------------------------------------------------------------------------------
+ Baza 3 tabele:	klienci(idklienta, imie, nazwisko, miejscowosc) 
+		ksiazki(idksiazki, imieautora, nazwiskoautora, tytul, cena)
+		zamowienia(idzamowienia, idklienta, idksiazki, data, status)
+ // ------------------------------------------------------------------------------------------------------------
+ 
+ SELECT * FROM ksiazki ORDER BY tytul ASC
+ // wyswietla wszystkie rekordy z tabeli ksiazki posortowane alfabetycznie po tytule
+ 
+ SELECT * FROM ksiazki  ORDER BY cena DESC LIMIT 1
+//  wyœwietla najdro¿sz¹ ksi¹¿kê z tabeli ksiazki 
+//  najpierw sortuje rekordy w tabeli ksiazki malej¹co a wiêc na samej górze jest tytu³ najdro¿szy 
+// nastêpnie  wprowadzamy funkcje LIMIT 1 która ogranicza wyœwietlanie wyników do jednego rekordu
+
+SELECT * FROM zamowienia  WHERE status="wyslano"
+// wyœwietla wszystkie rekordy z tabeli zamowienia gdzie status="wyslano"
+
+SELECT * FROM klienci  WHERE nazwisko="Rutkowski"
+// wyœwietla wszystkie rekordy z tabeli klienci gdzie nazwisko="Rutkowski"
+
+SELECT * FROM ksiazki  WHERE tytul LIKE "%PHP%"
+//wyœwietla wszystkie rekordy z tabeli ksi¹¿ki gdzie w kolumnie tytul na dowolnej pozycji jest "PHP"
+
+SELECT * FROM zamowienia  ORDER BY data DESC
+// sortuje zamowienia od najnowsze  (na górze)  do najstarszego w tabeli zamowienia
+// DESC stosujemy dlatego gdy¿ czas(data) u komputerach jest wyra¿any w milisekundach od 1.1.1970 
+// nowsze zamowienia w systemie maja wiêcej tych milisekund a starsze mniej dlatego dajemy DESC
+
+SELECT klienci.imie, klienci.nazwisko, zamowienia.idzamowienia, zamowienia.data FROM klienci, zamowienia  WHERE zamowienia.idklienta = klienci.idklienta
+// Wyœwietla 4 kolumny z dwóch tabel
+// Po SELECT w przypadku jeœli odnosimy siê do kilku tabeli musimy u¿yæ konstrukcji nazwa_tabeli.nazwa_kolumny 
+// Przez WHERE u¿ywamy przecinków natomiast po WHERE nie u¿ywamy juz przecinków tylko spójników logicznych OR lub AND
+// Po klauzuli WHERE w zapytaniach z³o¿onych musimy wypisaæ wszystkie relacje jakie zachodz¹ pomiêdzy u¿ywanymi przez nas tabelami
+// Relacje nie musz¹ wygl¹daæ tak "z.idklienta = k.idklienta" nazwy kolumn mog¹ byæ ró¿ne np. "z.idk=k.IDKLIENTA" wa¿ne aby kolumny mia³y taka w³aœnie nazwê
+
+SELECT k.imie, k.nazwisko, z.idzamowienia, z.data FROM klienci AS k, zamowienia AS z  WHERE z.idklienta = k.idklienta
+// to samo co wy¿ej ale za pomoc¹ aliasów (AS)
+
+SELECT klienci.imie, klienci.nazwisko FROM klienci, zamowienia  WHERE idksiazki=2 AND zamowienia.idklienta = klienci.idklienta
+//Wyœwietla wszystkie imiona i nazwiska klientów którzy zamówili kiedykolwiek ksi¹¿kê nr 2
+
+SELECT ksiazki.tytul, ksiazki.imieautora, ksiazki.nazwiskoautora FROM  ksiazki, zamowienia  WHERE idklienta=2 AND  zamowienia.idksiazki=ksiazki.idksiazki
+SELECT ksiazki.tytul, ksiazki.imieautora, ksiazki.nazwiskoautora FROM klienci, ksiazki, zamowienia  WHERE klienci.imie="Jan" AND klienci.nazwisko="Nowak" AND zamowienia.idklienta = klienci.idklienta AND zamowienia.idksiazki=ksiazki.idksiazki  // alternatywnie 
+// Wyœwietla komuny tytul oraz imie i nazwisko autora które zosta³y zamówione przez Jana Nowaka  zak³adamy ¿e znamy idklienta =2
+
+
+SELECT klienci.imie, klienci.nazwisko, zamowienia.idzamowienia, zamowienia.data, zamowienia.status, ksiazki.tytul FROM ksiazki,zamowienia,klienci WHERE klienci.nazwisko="Rutkowski" AND zamowienia.idklienta = klienci.idklienta AND zamowienia.idksiazki=ksiazki.idksiazki ORDER BY zamowienia.data DESC
+// Wyœwietla imiê i nazwisko klienta, ID status oraz datê zamówienia i tytu³ zamówionej ksi¹¿ki dla klienta o nazwisku Rutkowski
+
+UPDATE klienci SET nazwisko="Psikuta" WHERE idklienta=4
+// Zmienia w tabeli klienci kolumne nazwisko na "Psikuta" ale tylko tam gdzie idklienta=4
+
+UPDATE ksiazki SET cena=ROUND(cena*1.1,2)
+UPDATE ksiazki SET cena=ROUND(cena+cena*0.1,2)     // alternatywnie
+// Zwiêksza wartoœci kolumny cena o 10% z zaokr¹gleniem do 2 miejsc po przecinku
+// Sk³adnia: ROUND(co_zaokraglamy , ile_miejsc_po_przecinku)
+
+UPDATE ksiazki SET cena=cena-10 ORDER BY cena DESC LIMIT 1
+// modyfikuje w pierwszym  rekordzie tabeli ksiazki posortowanym malejaco po cenie  cena najdro¿szej ksi¹¿ki zmniejszaj¹c ja o 10
+
+UPDATE klienci SET nazwisko = "Dostojewska", imie="Joanna" WHERE idklienta=10
+// modyfikuje dwa pola(imie, nazwisko) w rekordzie z tabeli ksiazki gdzie idklienta=10
+
+UPDATE zamowienia SET status ="wyslano" WHERE idzamowienia BETWEEN 4 AND 5
+UPDATE zamowienia SET status ="wyslano" WHERE idzamowienia>=4 AND idzamowienia<=5		// Alternatywa
+UPDATE zamowienia SET status ="wyslano" WHERE idzamowienia=4 OR idzamowienia=5				// Alternatywa
+// zmienia pola 4 i 5 w Tabeli zamowienia, komumnie status na wys³ano
+
+INSERT INTO klienci VALUES (NULL,"Edek","Janowski",Chorzów)
+// Dodaje do tabeli klienci nowy rekord 
+// Podaj¹c NULL do pola które posiada autoinkrementacje system sam nadaje nastepny wolny numer rekordowi
+// Wa¿na jest kolejnoœc podawania w nawiacie kolejnych pól które musza byæ identyczne z konstrukcja tabeli
+
+
+INSERT INTO zamowienia VALUES (NULL,7,3,"2016-01-01","oczekiwania")
+INSERT INTO zamowienia (idzamowienia,data,status,idklienta,idksiazki) VALUES (NULL,"2016-01-01","oczekiwania",7,3)  // Alternatywa 
+// dodanie kolejnego rekordu do tabeli zamowienia
+// Mo¿na zmieniæ kolejnoœæ wpisywanych pól ale kolejnoœæ t¹ trzeba podaæ przed s³owem VALUES w nawiasie () z odpowiednim nazewnictwem kolumn
+
+INSERT INTO ksiazki VALUES (NULL,"","Grzedowicz","Pan Lodowego ogrodu",0)
+INSERT INTO ksiazki (idksiazki,nazwiskoautora,tytul) VALUES (NULL,"Haller","Paragraf 22")  // Alternatywa
+// Dodaje now¹ ksi¹¿kê do tabeli ksia¿ki ale nie uzupe³nia wszystkich pól
+// Domyœlna wartoœæ dla String to pusty ³añcuch a dla int 0
+
+INSERT INTO klienci VALUES (NULL,"John","Wane","Los Angeles"),(NULL,"Bob","Marley","Los Angeles")
+// Wstawienie jednoczeœnie dwóch rekordów do tabeli klienci 
+
+INSERT INTO klienci SET idklienta=NULL,imie="Steve",nazwisko="Jobs",miejscowosc="Palo Alto"
+// Alternatywny sposób dodawania rekordów
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+baza 5 tabel: 	klienci(kl_id, nazwa_kl, adres_kl, miasto_kl, woj._kl, kod_kl, kraj_kl, kontakt_kl,email_kl)
+PL/SQL		pozycje(numer_zam, pozycja_zam, id_prod, ilosc, cena_poz )
+		produkty(id_prod, id_dost, nazwa_prod, cena_prod, opis_prod)
+		prod_uwagi(id_uw, id_prod, data_uw, tekst_uw)
+		dostawcy(id_dost, nazwa_dost, adres_dost, miasto_dost, woj._dost, kod_dost, kraj_dost)
+		zamowienia(numer_zam, data_zam)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SELECT DISTINCT id_dost FROM produkty;
+// s³owo DISTINCT zwraca unikatowe id_dost
+
+SELECT id_dost, cena_prod, nazwa_prod FROM produkty ORDER BY cena_prod, nazwa_prod;
+// G³ówn¹ kategoria wed³ug której s¹ porz¹dkowane wyniki to cena ale jeœli trafia siê kilka takich samych cen to drugim kryterium bêdzie nazwa produktu
+
+SELECT id_dost, nazwa_prod FROM produkty WHERE id_dost != '1003';
+// Wyœwietli wszystkie id_dost poza 1003 
+// !=  alternatywa dla tego znaku jest <>
+
+SELECT cena_prod FROM produkty WHERE cena_prod IS NULL
+// Wyœwietli wszystkie ceny z tabeli produkty gdzie w cenie mamy NULL
+
+SELECT nazwa_prod,cena_prod FROM produkty  WHERE id_dost NOT IN (1003,1002);
+// Wyœwietla wszystko z wyj¹tkiem wierszy gdzie id_dost jest 1003 lub 1002 
+
+SELECT nazwa_prod FROM produkty WHERE REGEXP_LIKE(nazwa_prod, '1000' );
+// funkcja ta przyjmuje parametry  REGEXP_LIKE (nazwa_kolumny_w_której_szukamy , 'szukany_wzorzec' )
+// funkcja ta znajdzie wszystkie nazwy z ³añcuchem '1000'
+
+SELECT nazwa_prod FROM produkty WHERE REGEXP_LIKE(nazwa_prod, '.000' );
+// kropka (.) zastêpuje jeden dowolny znak a wiec wzorzec wyszuka zarówno '1000' jak i '2000' itd. do '9000'
+
+SELECT nazwa_prod FROM produkty WHERE REGEXP_LIKE(nazwa_prod, '1000|2000' );
+// symbol pionowej kreski (|) to inaczej OR a wiec znajdzie i '1000' i '2000'
+
+SELECT nazwa_prod FROM produkty WHERE REGEXP_LIKE(nazwa_prod, '[123] t' );
+// W nawiasie [] s¹ umieszczone trzy alternatywy a wiec wzorzec bêdzie pasowa³ do '1 t' oraz '2 t' i '3 t'
+
+SELECT nazwa_prod FROM produkty WHERE REGEXP_LIKE(nazwa_prod, '[^123] t' );
+// [^123] oznacza w tym miejscu dopasowanie do ka¿dego mo¿liwego znaku z wyj¹tkiem 1,2,3
+// ^ oznacza negacjê
+
+SELECT nazwa_prod FROM produkty WHERE REGEXP_LIKE(nazwa_prod, '[1-5] t' );
+// [1-5] oznacza jeden znak z zakresu od 1 do 5
+
+SELECT nazwa_prod FROM produkty WHERE REGEXP_LIKE(nazwa_prod, '\d{4}' );
+// Wzorzec to cztery dowolne liczby
+// tabela klas znaków(przyk³ady: \d\D\w\W\s\S) str. 87 oraz tabela metaznaków powtórki(przyk³ady *+?{n}{n,}{n,m}) str 88
+
+SELECT nazwa_prod FROM produkty WHERE REGEXP_LIKE(nazwa_prod, '\(\d las\w{2}\)' );
+// Wzorzec '(+jedna_cyfra+ +las+dwie_litery+)'  wynik to 'Dynamit (1 laska)' lub 'Dyamit (5 lasek)'
+// mo¿na zastosowaæ to samo co wy¿ej tylko z znakiem ASERCJI (kotwica) $(koniec tekstu) ^(pocz¹tek tekstu)
+
+SELECT nazwa_dost || ' , (' || kraj_dost || ')' FROM dostawcy ORDER BY nazwa_dost;
+// Konkatenacja dwóch pól za pomoc¹ znaków || które ³¹cz¹ wybrane kolumny z ³añcuchami jak naprzyk³ad ' , ('
+// jest to inaczej pole obliczeniowe
+
+SELECT RTRIM(nazwa_dost) || ' , (' || RTRIM(kraj_dost) || ')' FROM dostawcy ORDER BY nazwa_dost;
+// to samo co wy¿ej tylko z funkcj¹ RTRIM() która obcina niepotrzebne spacje po prawej
+// s¹ jeszcze inne funkcje usuwaj¹ce spacje  LTRIM()- usuwa po lewej  oraz TRIM()-usuwa po obu stronach 
+
+SELECT RTRIM(nazwa_dost) || ' , (' || RTRIM(kraj_dost) || ')' AS Tytul_dostawy FROM dostawcy ORDER BY nazwa_dost;
+// to samo co wy¿ej tylko z aliasem
+
+SELECT id_prod, ilosc, cena_poz, ilosc*cena_poz AS wartosc FROM pozycje WHERE numer_zam = 20005;
+// mno¿enie dwóch kolumn i pokazywanie wyniku
+// inne operacje matematyczne to standardowo (+-*/)
+
+SELECT nazwa_dost, UPPER(nazwa_dost) FROM dostawcy ORDER BY nazwa_dost;
+// funkcja UPPER() zwraca pola z kolumny wielkimi literami
+
+SELECT nazwa_dost, LENGTH(nazwa_dost) FROM dostawcy ORDER BY nazwa_dost;
+// zwraca d³ugoœæ nazwy nazwa_dost ?? 
+
+SELECT nazwa_dost, ???????(nazwa_dost) FROM dostawcy ORDER BY nazwa_dost;
+// inne popularne metody str. 103
+
+SELECT kl_id, numer_zam FROM zamowienia WHERE data_zam = TO_DATE('2015-02-01', 'yyyy-mm-dd');
+// Wyœwietla zamówienie z 2015-02-01
+
+SELECT kl_id, numer_zam FROM zamowienia WHERE data_zam = BETWEEN TO_DATE('2015-02-01', 'yyyy-mm-dd') AND TO_DATE('2015-03-01', 'yyyy-mm-dd');
+SELECT kl_id, numer_zam FROM zamowienia WHERE EXTRACT(Year FROM data_zam)= 2015 AND EXTRACT(Month FROM data_zam)=2;
+// Dwa alternatywne sposoby wyœwietlania zamówieñ z marca 2015
+
+SELECT AVG(cena_prod) AS sr_cena FROM produkty;
+// wyci¹ga cenne œredni¹ z kolumny cena_prod
+
+SELECT AVG(cena_prod) AS sr_cena FROM produkty WHERE id_dost=1003;
+// To samo co wy¿ej ale tylko z id_dost = 1003
+
+SELECT COUNT(*) AS liczba_klientow11 FROM klienci;
+// Wyœwietla iloœæ wierszy w tabeli klienci
+
+SELECT COUNT(email_kl) AS liczba_klientow11 FROM klienci;
+// Wyœwietla iloœæ pól w kolumnie (email_kl) gdzie wartoœæ nie jest pusta
+
+SELECT MAX(cena_prod) AS sr_cena FROM produkty;
+// Cena maksymalna
+
+SELECT MAX(cena_prod) AS sr_cena FROM produkty;
+// Cena minimalna
+
+SELECT SUM(ilosc) AS ilosc_poz1 FROM pozycje WHERE numer_zam = 20005;
+// suma elementów w tabeli iloœæ dla numer_zam 20005
+
+SELECT SUM(cena_poz*ilosc) AS laczna_cena FROM pozycje WHERE numer_zam=20005;
+// zwraca sumê cen za wszystkie sztuki poszczególnych elementów
+
+SELECT AVG(cena_prod) AS sr_cena FROM produkty WHERE id_dost =1003;
+// Œrednia cena wszystkich produktów od dostawcy 1003 w tabeli produkty
+
+SELECT AVG(DISTINCT cena_prod) AS sr_cena FROM produkty WHERE id_dost =1003;
+// Œrednia cena wszystkich produktów (z wy³¹czeniem cen produktów które siê powtarzaj¹ np. 2,5) od dostawcy 1003 w tabeli produkty 
+ 
+SELECT COUNT(*) AS Liczba_elementow, MIN(cena_prod) AS Minimalna_cena, MAX(cena_prod) AS Maksymalna_cena, AVG(cena_prod) AS Srednia_cena FROM produkty;
+// £¹czenie metod agregacji
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+GRUPOWANIE
+
+SELECT COUNT(*) AS Liczba_produktow FROM produkty WHERE id_dost = 1003;
+// Liczy wyst¹pienie w kolumnie id_dost wartoœci 1003 w tabeli produkty (czyli tak naprawdê iloœæ produktów)
+
+SELECT COUNT(*) AS Ostatnie_sztuki FROM pozycje WHERE ilosc = 1;
+// Liczy wyst¹pienie w kolumnie iloœæ wartoœci 1 w tabeli pozycje (a wiec liczy produkty które zosta³y tylko w jednym egzemplarzu)
+
+SELECT id_dost,COUNT(*) AS Liczba_produktow FROM produkty GROUP BY id_dost;
+// Tworzy dwie kolumny jedna id_dost a druga to pole obliczeniowe. Nastêpnie funkcja agreguj¹ce COUNT(*) jest wyliczana dla wszystkich grup z osobna.
+// w wyniku mamy iloœæ(sumê) wyst¹pienie wszystkich poszczególnych wartoœci z kolumny id_dost
+// grupujemy po pierwszej kolumnie po SELECT
+ 
+SELECT numer_zam , COUNT(*) AS Ilosc_sztuk_w_zamowieniu FROM pozycje GROUP BY numer_zam;
+SELECT ilosc, COUNT(*) AS Ilosc_wystapien FROM pozycje GROUP BY ilosc;
+// podobne do powy¿szego przyk³ady
+
+SELECT id_dost, COUNT(*) AS Liczba_produktow FROM produkty GROUP BY id_dost HAVING COUNT(*) >=2;
+// dwie kolumny gdzie COUNT(*) jest robione na podstawie id_dost, ale za pomoc¹ HAVING wycinane s¹ grupy które maja mniej ni¿ 2 wyst¹pienia w kolumnie id_dost
+
+SELECT id_dost, COUNT(*) AS Liczba_produktow FROM produkty WHERE cena_prod >=10 GROUP BY id_dost HAVING COUNT(*) >=2;
+// To samo co wy¿ej z t¹ ró¿nic¹ ¿e przed wyciêciem grup przez HAVING polecenie WHERE wywala wiersze gdzie cena produktu jest mniejsza ni¿ 10
+
+SELECT salary, COUNT(*) AS Ilosc_pracownikow_z_ta_pens FROM employees WHERE first_name='Julia' GROUP BY salary HAVING COUNT(*) =1;
+// To samo dzia³anie inne tabele
+
+SELECT numer_zam ,SUM(ilosc*cena_poz) AS Suma_za_wszystko FROM pozycje GROUP BY numer_zam HAVING sum(ilosc*cena_poz) >= 50;
+// Wyœwietla dwie kolumny  numer i sumê Having ogranicz grupy które w funkcji agreguj¹cej SUM() dosta³y wynik mniejszy ni¿ 50 
+
+SELECT numer_zam ,SUM(ilosc*cena_poz) AS Suma_za_wszystko FROM pozycje GROUP BY numer_zam HAVING sum(ilosc*cena_poz) >= 50 ORDER BY Suma_za_wszystko DESC, numer_zam;
+// To samo co wy¿ej posortowane malej¹co po polu obliczalnym Suma_za_wszystko, drugim kryterium jest numer_zam
+
+// HAVING filtruje grupy a WHERE filtruje wiersze 
+// WHERE jest zawsze przezd HAVING w konstrukcji kwerendy
+// Wiersze wyeleminowane przez WHERE nie bêd¹ brane pod uwage przez HAVING
+// Generalnie HAVING jest do obs³ugi funkcji agreguj¹cych
+// Kolejnoœæ : SELECT * FROM * WHERE * GROUP BY * HAVING * ORDER BY*
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+KWERENDY ZAGNIEZDZONE 
+
+SELECT kl_id FROM zamowienia WHERE numer_zam IN (SELECT numer_zam FROM pozycje WHERE id_prod = 'TNT2');
+// Jeden SELECT w drugim. Pierwszy umieszczony g³êbiej wyci¹ga numer_zam z tabeli pozycje a kolejny SELECT na podstawie numerów zamówienia z pierwszego wyszukuje kl_id
+
+SELECT nazwa_kl, kontakt_kl, miasto_kl FROM klienci WHERE kl_id IN (SELECT kl_id FROM zamowienia WHERE numer_zam IN (SELECT numer_zam FROM pozycje WHERE id_prod = 'TNT2'));
+// Potrójne zagnie¿d¿enie dwa najg³êbsze SELECTY daj¹ ³¹cznie kl_id i na podstawie tego otrzymywane s¹ dane o kliencie
+
+SELECT nazwa_kl,woj_kl, (SELECT COUNT(*) FROM zamowienia WHERE zamowienia.kl_id=klienci.kl_id) AS zamowienia FROM klienci ORDER BY nazwa_kl;
+// (SELECT COUNT(*) FROM zamowienia WHERE zamowienia.kl_id=klienci.kl_id)  - reprezentuje pole obliczeniowe które zlicza iloœæ zamówieñ dla ka¿dego kl_id
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SELECT nazwa_dost, nazwa_prod, cena_prod FROM dostawcy, produkty WHERE dostawcy.id_dost = produkty.id_dost;
+SELECT nazwa_dost, nazwa_prod, cena_prod FROM dostawcy INNER JOIN produkty ON ostawcy.id_dost = produkty.id_dost;
+// dwie ró¿ne metody ³¹czenia dwóch tabel 
+
+SELECT nazwa_dost, nazwa_prod, cena_prod ilosc FROM pozycje, dostawcy, produkty WHERE dostawcy.id_dost = produkty.id_dost AND pozycje.id_prod = produkty.id_prod AND numer_zam = 20005;
+SELECT nazwa_dost, nazwa_prod, cena_prod, ilosc FROM pozycje INNER JOIN produkty ON pozycje.id_prod = produkty.id_prod INNER JOIN dostawcy ON produkty.id_dost = dostawcy.id_dost WHERE numer_zam = 20005;
+// dwie ró¿ne metody ³aczenia trzech tabel
+
+
+SELECT nazwa_kl, kontakt_kl FROM klienci
+INNER JOIN zamowienia ON klienci.kl_id = zamowienia.kl_id
+INNER JOIN pozycje ON pozycje.numer_zam = zamowienia.numer_zam
+WHERE id_prod = 'TNT2';
+
+SELECT nazwa_kl, kontakt_kl FROM klienci, zamowienia, pozycje 
+WHERE klienci.kl_id = zamowienia.kl_id 
+AND pozycje.numer_zam = zamowienia.numer_zam 
+AND id_prod= 'TNT2';
+// ponownie dwie ró¿ne metody ³aczenia trzech tabel
+
+SELECT nazwa_kl, kontakt_kl FROM klienci K, zamowienia Z, pozycje P 
+WHERE K.kl_id = Z.kl_id 
+AND P.numer_zam = Z.numer_zam 
+AND id_prod= 'TNT2';
+// to samo co wy¿ej ale z u¿yciem aliasów (które wstawiamy po FROM)
+// w ORACLE podczas pisania aliasów po FROM nie uzywamy AS !!!!! powoduje to b³¹d podczas wywo³ywania (ale tylko po FROM po WHERE mozna uzywaæ AS)
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+// TWORZENIE I EDYCJA TABEL
+INSERT INTO kolo_wedkarskie VALUES (1,'Slupia',232,TO_DATE('2000-10-28', 'yyyy-mm-dd'),13);
+
+CREATE TABLE alfa
+(
+id_alfa INT NOT NULL,
+nazwa VARCHAR2(50) NOT NULL,
+data DATE NOT NULL,
+cena NUMBER(10,2) NULL,
+nazwa2 CHAR(20)
+);
+// tworzenie tabeli alfa z piêcioma kolumnami 
+
+
+ CREATE TABLE beta
+(
+id_beta INT NOT NULL,
+cena DECIMAL(20,2)
+);
+// to samo co wy¿ej
+
+
+ALTER TABLE alfa ADD id_beta INTEGER; 
+// dodawanie szóstej kolumny do alfy
+
+
+ALTER TABLE alfa DROP COLUMN data; 
+// usuwanie kolumny data z tabeli alfa
+
+  
+ALTER TABLE alfa ADD CONSTRAINT pk_NaszaNazwaPrimaryKey PRIMARY KEY (id_alfa);
+// pk_NaszaNazwaPrimaryKey  to nazwa któr¹ sobie wymyœlamy dla naszego PRIMARY KEY (musi byæ unikatowa)
+// id_alfa to kolumna któr¹ ustawiamy jako PRIMERY KEY w tabeli
+
+
+ALTER TABLE beta ADD CONSTRAINT pk_NaszaNazwaPrymaryKey PRIMARY KEY (id_beta);
+// to samo co wy¿ej
+
+
+ALTER TABLE inne ADD CONSTRAINT fk_nazwa_klucza_obcego FOREIGN KEY (idinne2) REFERENCES inne2 (idinne2);
+
+DROP TABLE alfa;
+// usuwanie tabeli alfa
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// PERSPEKTYWY
+
+CREATE VIEW produktyKlientow  AS SELECT nazwa_kl, kontakt_kl, id_prod  FROM klienci, zamowienia, pozycje WHERE klienci.kl_id=zamowienia.kl_id AND pozycje.numer_zam=zamowienia.numer_zam; 
+// tworzenie perspektywy produktyKlientów ³¹cz¹cej trzy tabele 
+// Perspektywy sa sposobem przekazywania danych które przechowywane s¹ w innym miejscu
+
+
+SELECT nazwa_kl FROM produktyKlientow WHERE id_prod='TNT2';
+// u¿ycie perspektywy produktyKlientow w SELECT 
+
+
+CREATE VIEW lokalizacjaKlientow AS SELECT RTRIM(nazwa_dost) || ' (' || RTRIM(kraj_dost) || ')' AS Tytul_dostawcy FROM dostawcy ORDER BY nazwa_dost;
+// inna perspektywa
+
+SELECT * FROM lokalizacjaKlientow;
+
+CREATE VIEW wartosciPozycji AS SELECT numer_zam, id_prod, ilosc, cena_poz, ilosc*cena_poz AS wartosc FROM pozycje;
+// perspektywa z polem obliczeniowym wartoœæ
+
+drop view produktyKlientow2;
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// PROCEDURY
+
+CREATE OR REPLACE PROCEDURE witaj IS 
+BEGIN 
+DBMS_OUTPUT.PUT_LINE	('Powitanie !!!')
+END;
+// najprostrza mozliwa procedura
+
+EXECUTE witaj;
+// wykonanie procedury
+
+
+CREATE OR REPLACE PROCEDURE wiekszyrozmiar (
+    v_id_buty IN buty.id_buty%TYPE,
+    v_rozmiar IN buty.rozmiar%TYPE) 
+    IS
+    BEGIN 
+    UPDATE buty SET rozmiar=v_rozmiar WHERE id_buty=v_id_buty; 
+    COMMIT;
+END;
+EXECUTE wiekszyrozmiar(3,23);
+// prosta procedura modyfikuj¹ca tabele buty
+
+CREATE OR REPLACE PROCEDURE powitanie IS
+h number;
+g char(20);
+BEGIN 
+SELECT EXTRACT(HOUR FROM CURRENT_TIMESTAMP) INTO h FROM dual;
+IF h >= 20 OR h <= 5 THEN g := 'Dobranoc!';
+ELSIF h > 5 AND h <=17 THEN g := 'Dziendobry';
+ELSE g :='Dobry wieczor';
+END IF;
+DBMS_OUTPUT.PUT_LINE(g);
+END;
+// Tworzenie proceduty powitanie, najpierw deklarujemy dwie zmienna h i g potem wyci¹gamy aktualn¹ godzine z tabeli dual i zapisujemy ja do h, na podstawie h i IF ELSE ustalamy g.
+// potem wyswietlamy g na ekranie 
+// cia³o procedury znajduje sie pomiedzy BEGIN  oraz END; 
+// w procedurach pomiêdzy IS a BEGIN nie potrzebujemy(niewolno?) deklaracji DECLARE
+
+
+CREATE OR REPLACE PROCEDURE dodajKlienta(
+    v_nazwa_kl IN klienci.nazwa_kl%TYPE,
+    v_adres_kl IN klienci.adres_kl%TYPE,
+    v_miasto_kl IN klienci.miasto_kl%TYPE,
+    v_woj_kl IN klienci.woj_kl%TYPE,
+    v_kod_kl IN klienci.kod_kl%TYPE,
+    v_kraj_kl IN klienci.kraj_kl%TYPE,
+    v_kontakt_kl IN klienci.kontakt_kl%TYPE,
+    v_email_kl IN klienci.email_kl%TYPE)
+    IS
+    v_kl_id number;
+    BEGIN
+    SELECT MAX(kl_id) INTO v_kl_id FROM klienci;
+    v_kl_id:=v_kl_id+1;
+    INSERT INTO klienci(kl_id,nazwa_kl,adres_kl,miasto_kl,woj_kl,kod_kl,kraj_kl,kontakt_kl,email_kl)
+    VALUES(v_kl_id,v_nazwa_kl,v_adres_kl,v_miasto_kl,v_woj_kl,v_kod_kl,v_kraj_kl,v_kontakt_kl,v_email_kl);
+    COMMIT;
+    END;
+// procedura dodajaca klienta, druga linia deklaruje zmianna v_nazwa_kl która jest powiazana z klienci.nazwa_kl i ma ten sam typ.
+// polecenia COMMIT; zapisuje dane do bazy 
+
+
+EXECUTE dodajKlienta('Ramzesowo','Morska 191/200','Gdynia','POM','81-002','POL','Kriss','ram@spa.pl')
+// przyk³ad u¿ycia procedury dodajKlienta
+
+
+DROP PROCEDURE dodajKlienta;
+
+--1. Zwiekszenie wszystkich d³ugoœci ryb w tabeli ryba
+CREATE OR REPLACE PROCEDURE zwiekszenie_rozmiaru_ryb IS 
+v_wydluzenie number := 20;
+BEGIN 
+UPDATE ryba SET dlugosc=dlugosc+v_wydluzenie;
+END;
+
+-- wywo³anie
+SELECT dlugosc FROM ryba;
+EXECUTE ZWIEKSZENIE_ROZMIARU_RYB;
+SELECT dlugosc FROM ryba;
+
+--2. Procedura wyœwietla ³¹czn¹ d³ugoœc i ciê¿ar z³apanych ryb oraz zlicza iloœæ z³apanych sztuk poszczegunlych gatunków.
+CREATE OR REPLACE PROCEDURE suma
+IS 
+v_dlugosc NUMBER;
+v_waga NUMBER(8,2);
+v_szczupaki NUMBER;
+v_okonie NUMBER;
+v_sumy NUMBER;
+BEGIN 
+SELECT SUM(dlugosc) INTO v_dlugosc FROM ryba;
+SELECT SUM(ciezar) INTO v_waga FROM ryba;
+SELECT COUNT(gatunek) INTO v_szczupaki FROM ryba WHERE gatunek='Szczupak';
+SELECT COUNT(gatunek) INTO v_okonie FROM ryba WHERE gatunek='Okoñ';
+SELECT COUNT(gatunek) INTO v_sumy FROM ryba WHERE gatunek='Sum';
+DBMS_OUTPUT.PUT_LINE('Cakowita dugoœæ zapanych ryb to: '||v_dlugosc||' cm ,natomiast ich l¹czna waga wynosi: '||v_waga||' kg.');
+DBMS_OUTPUT.PUT_LINE(v_szczupaki||' szczupaków '||', '||v_okonie||' okoni oraz '||v_sumy||' sumy.');
+END;
+
+-- wywo³anie
+EXECUTE suma;
+
+
+--3.  Zwiekszenie masy  dowolnej konkretnej ryby podaj¹c przy tym o ile masa ma byæ zwiekszona 
+CREATE OR REPLACE PROCEDURE zwiekszenie_ciezaru_ryby (
+v_id IN ryba.id_ryby%TYPE,
+v_dodatkowa_waga IN ryba.ciezar%TYPE)
+IS 
+BEGIN 
+UPDATE ryba SET ciezar=ciezar+v_dodatkowa_waga WHERE id_ryby=v_id;
+END;
+
+-- wywo³anie
+SELECT * FROM ryba;    
+EXECUTE zwiekszenie_ciezaru_ryby(1,7.99);
+
+
+--4.  Procedura wyœwietla w³aœciwoœci przynety na podstawie jej id które wpisujemy jako parametr procedury
+CREATE OR REPLACE PROCEDURE parametry_przynety (
+v_id IN przyneta.id_przynety%TYPE)
+IS 
+v_rozmiar NUMBER;
+v_kolor VARCHAR2(40);
+v_typ VARCHAR2(40);
+BEGIN 
+SELECT rozmiar INTO v_rozmiar FROM przyneta WHERE id_przynety=v_id;
+SELECT kolor INTO v_kolor FROM przyneta WHERE id_przynety=v_id;
+SELECT typ INTO v_typ FROM przyneta WHERE id_przynety=v_id;
+DBMS_OUTPUT.PUT_LINE('Rozmiar przynety to: '||v_rozmiar||' cm, kolor: '||v_kolor||', oraz typ : '||v_typ);
+END;
+
+-- wywo³anie    
+EXECUTE parametry_przynety(2);
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// WYZWALACZE to zapytania które s¹ wykonywane automatycznie przez serwer Oracle jako reakcja na reakcja na któr¹œ z instrukcji ALTER, CREATE,DROP,DELETE,INSERT,UPDATE
+
+CREATE TABLE historia_zam (data_zmiany date NOT NULL, rodzaj_zmiany char(1) NOT NULL, numer_zam int NOT NULL);
+// aby nasze wyzwalacze dzia³a³y trzeba stworzyæ tabele do której bêd¹ zapisywaæ
+
+
+CREATE OR REPLACE TRIGGER zamowienia_po_insert 
+AFTER INSERT ON zamowienia
+FOR EACH ROW 
+BEGIN 
+INSERT INTO historia_zam(data_zmiany,rodzaj_zmiany,numer_zam) VALUES(SYSDATE, 'A', :NEW.numer_zam);
+END;
+// istnieje wirtualna tabela :NEW w której s¹ dane przeznaczone do wstawiania do bazy. 
+// W wyzwalaczu uruchomionym przed zapytaniem mo¿esz aktualizowaæ dane z tabeli :NEW 
+// AFTER - u¿ywamy jeœli dane których potrzebujemy bêd¹ utworzone dopiero po przetworzeniu zapytania
+// BEFORE - u¿ywamy do walidacji czy porz¹dkowania danych
+// SYSDATE reprezentuje datê systemow¹
+
+
+INSERT INTO zamowienia(numer_zam, data_zam, kl_id) VALUES(20019, TO_DATE('2016-01-08', 'yyyy-mm-dd'), 10001);
+// INSERT potrzebny do sprawdzenia wyzwalacza zamowienia _po_insert
+
+
+CREATE OR REPLACE TRIGGER archiwizacja_danych
+BEFORE DELETE ON zamowienia
+FOR EACH ROW 
+BEGIN
+INSERT INTO historia_zam(data_zmiany,rodzaj_zmiany,numer_zam) VALUES(SYSDATE, 'D', :OLD.numer_zam);
+INSERT INTO archiwum_zamowien(numer_zam, data_zam, kl_id) VALUES (:OLD.numer_zam, :OLD.data_zam, :OLD.kl_id);
+END;
+// wyzwalacz archiwizacja_danych dzia³a przed wykonaniam polecenia DELETE najpierw aktualizuje tabele historia_zmian potem ustawia kasowane wiersze do tabeli archiwum_zamowien
+// wirtualna tabela :OLD nie daje sie modyfikowaæ
+
+
+DELETE FROM zamowienia WHERE numer_zam=20019;
+// polecenie DELETE sprawdzaj¹ce wyzwalacz archiwizacja_danych
+
+
+CREATE OR REPLACE TRIGGER klienci_przed_update
+BEFORE INSERT OR UPDATE  ON klienci
+FOR EACH ROW 
+BEGIN
+    :NEW.woj_kl := UPPER(:NEW.woj_kl);
+END;
+// wyzwalacz uaktywnia sie podczas INSERT oraz UPDATE i zmienia litery na wielkie w woj_kl
+
+
+--  TRIGGERS 
+
+-- 1. Wyzwalacz - sugeruje wpisanie zbyt du¿ych wartoœci.
+CREATE OR REPLACE TRIGGER za_duzy_rozmiar
+AFTER UPDATE OR INSERT ON ryba
+FOR EACH ROW
+WHEN (new.dlugosc > 250)
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Ponad 250 cm ? nie pomyli³eœ sie ?');
+END;
+
+INSERT INTO ryba VALUES (15,'Jesiotr',280,43);
+
+
+-- 2. Wyzwalacz - nazwa kraju zawsze bedzie wpisana wielkimi literami
+CREATE OR REPLACE TRIGGER nazwa_kraju_wielkie_litery
+BEFORE UPDATE OR INSERT ON adres
+FOR EACH ROW
+BEGIN
+:NEW.kraj := Upper(:NEW.kraj);
+END;
+
+--wywo³anie
+INSERT INTO adres VALUES (16,'polska','Gdañsk','Hallera',43);
+SELECT * FROM adres WHERE id_adres=16;
+
+-- 3. Wyzwalacz - archiwizacja producentów podczas ich usuwania i zapisywanie usuwanych wierszy w inne tabeli 
+CREATE OR REPLACE TRIGGER archiwizacja_producentow
+BEFORE DELETE ON producent
+FOR EACH ROW
+BEGIN
+    INSERT INTO producent_archiwum VALUES (:OLD.id_producenta,:OLD.nazwa,:OLD.adres_id_adres);
+END;
+
+--wywo³anie
+INSERT INTO producent VALUES (7,'SUNTO',12);
+DELETE FROM producent WHERE nazwa='SUNTO';
+SELECT * FROM producent_archiwum;
+
+
+-- 4. Wyzwalacz - wyœwietlanie przeprowadzanych operacji na tabeli wedkarz
+CREATE OR REPLACE TRIGGER wyswietlanie_zmian_wedkarzy
+BEFORE DELETE OR INSERT OR UPDATE ON wedkarz
+FOR EACH ROW
+BEGIN 
+IF INSERTING THEN DBMS_OUTPUT.PUT_LINE('Dodany wêdkarz: '||:NEW.imie||' '||:NEW.nazwisko);
+ELSIF UPDATING THEN DBMS_OUTPUT.PUT_LINE('Zmieniony wêdkarz: '||:OLD.imie||' '||:OLD.nazwisko); 
+ELSIF DELETING THEN DBMS_OUTPUT.PUT_LINE('Usuniety wêdkarz: '||:OLD.imie||' '||:OLD.nazwisko);
+END IF;
+END;
+
+--wywo³anie
+INSERT INTO wedkarz VALUES (9,'Marian','Opania','1943-02-01',1,1,3);
+UPDATE wedkarz SET adres_id_adres=3 WHERE id_wedkarz=9;
+DELETE FROM wedkarz WHERE id_wedkarz=9;
+
+
+--5. Wyzwalacz - historia zmian na tabeli ryba zapisywana do innej tabeli w której mamy czas zmiany rodzaj zmiany i gatunek który zosta³ zmieniony/usuniety/dodany 
+CREATE OR REPLACE TRIGGER historia_zmian
+BEFORE DELETE OR INSERT OR UPDATE ON ryba
+FOR EACH ROW
+BEGIN 
+IF INSERTING THEN INSERT INTO ryba_zmiany VALUES(SYSDATE,'Wstawienie wiersza',:NEW.gatunek);
+ELSIF UPDATING THEN INSERT INTO ryba_zmiany VALUES(SYSDATE,'Zmiana wiersza',:OLD.gatunek);
+ELSIF DELETING THEN INSERT INTO ryba_zmiany VALUES(SYSDATE,'Usuwanie wiersza',:OLD.gatunek);
+END IF;
+END;
+
+--wywo³anie
+INSERT INTO ryba VALUES (13,'Kleñ',60,3.3);
+DELETE FROM ryba WHERE id_ryby=13;
+SELECT * FROM ryba_zmiany;
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//FUNKCJE
+
+CREATE FUNCTION LiczbaPracownikow
+(p_id_zesp IN NUMBER DEFAULT null) RETURN NUMBER IS
+v_liczba_prac NUMBER(5);
+BEGIN
+IF p_id_zesp is null THEN
+SELECT count(*) INTO v_liczba_prac FROM pracownicy;
+ELSE
+SELECT count(*) INTO v_liczba_prac FROM pracownicy
+WHERE id_zesp = p_id_zesp;
+END IF;
+RETURN v_liczba_prac;
+END;
+
+-------------
+
+CREATE OR REPLACE FUNCTION Ile_Lat (p_data IN DATE)
+RETURN NUMBER IS
+v_ile_lat NUMBER(4);
+BEGIN
+v_ile_lat := ROUND(MONTHS_BETWEEN(sysdate, p_data)/12,0);
+RETURN v_ile_lat;
+END;
+
+
+BEGIN
+DBMS_OUTPUT.PUT_LINE(Ile_Lat('1982-11-20'));
+END;
+-------------
+CREATE OR REPLACE PROCEDURE zwiekszenieo_10prc IS
+  CURSOR wszyscy IS SELECT * FROM KOLO_WEDKARSKIE;
+  v_max INT;
+BEGIN
+SELECT max(kasa) INTO v_max FROM KOLO_WEDKARSKIE   WHERE ROWNUM <= 3 ORDER BY (kolo_wedkarskie.kasa) DESC;
+  FOR i IN wszyscy LOOP
+      UPDATE kolo_wedkarskie SET kasa=(kasa*0.1)+kasa WHERE kasa<v_max AND id_kola = i.id_kola;
+  END LOOP;
+END;
+
+EXEC zwiekszenieo_10prc;
+
+-- FUNKCJE
+--1. Prosta funkcje zliczaj¹ca wszystkich wedkarzy w bazie
+CREATE FUNCTION Liczba_Wedkarzy RETURN NUMBER IS
+v_liczba_w NUMBER(5);
+BEGIN
+SELECT count(*) INTO v_liczba_w FROM wedkarz;
+RETURN v_liczba_w;
+END;
+
+-- wywo³anie
+BEGIN
+DBMS_OUTPUT.PUT_LINE(LICZBA_WEDKARZY);
+END;
+
+
+--2. Funkcja sprawdza ile wypraw wêdkarskich by³o przeprowadzonych przed dat¹ która jest wpisywana jako parametr w funkcji ile_wypraw_przed
+CREATE OR REPLACE FUNCTION ile_wypraw_przed(p_data DATE) RETURN INTEGER IS
+ v_ile_wypraw INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO v_ile_wypraw FROM wyprawa w WHERE w.data < p_data;
+  RETURN v_ile_wypraw;
+END;
+
+-- wywo³anie
+SELECT * FROM wyprawa;
+BEGIN
+DBMS_OUTPUT.PUT_LINE(ile_wypraw_przed('2016-10-18'));
+DBMS_OUTPUT.PUT_LINE(ile_wypraw_przed(SYSDATE));
+END;
+
+
+--3. Funkcja która na podstwaie ID wedkarza dostarczanego jako parametr oblicza jego wiek.
+CREATE OR REPLACE FUNCTION Ile_Lat (p_id IN NUMBER)
+RETURN NUMBER IS
+v_ile_lat NUMBER(4);
+v_data DATE;
+BEGIN
+SELECT data_ur INTO v_data FROM wedkarz WHERE ID_WEDKARZ=p_id;
+v_ile_lat := ROUND(MONTHS_BETWEEN(sysdate, v_data)/12,0);
+RETURN v_ile_lat;
+END;
+
+--wywo³anie
+BEGIN
+DBMS_OUTPUT.PUT_LINE('Wêdkarz ten ma '||Ile_Lat(7)||' lat.');
+END;
+
+
+--4. Funkcja sprawdza ile w bazie jest ryb które s¹ wiêksze ni¿ wpisany parametr funkcji ile_wiekszych
+CREATE OR REPLACE FUNCTION ile_wiekszych(p_dlugosc IN INT) RETURN INT IS
+  CURSOR ryby IS SELECT * FROM ryba;
+  v_licznik INT := 0;
+BEGIN
+  FOR i IN ryby LOOP
+    IF (i.dlugosc > p_dlugosc) THEN
+      v_licznik := v_licznik + 1;
+    END IF;
+  END LOOP;
+  RETURN v_licznik;
+END;
+
+--wywo³anie
+BEGIN
+  DBMS_OUTPUT.PUT_LINE(ile_wiekszych(200));
+END;
+
+
+--5. Funkcja sprawdza czy dana ryba jest czesto po³awiana czy raczej sporadycznie. 
+ CREATE OR REPLACE FUNCTION czy_czesto_lapana(
+    v_gatunek ryba.gatunek%TYPE)
+    RETURN BOOLEAN IS
+    v_ilosc NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_ilosc FROM ryba WHERE gatunek=v_gatunek;
+    IF v_ilosc>2 THEN
+    RETURN TRUE;
+    ELSE
+    RETURN FALSE;
+    END IF;
+END;
+    
+-- wywo³anie	
+-- Zamiast 'Sum' jako parametr mo¿na równie¿ podaæ 'Szczupak' lub 'Okoñ'
+    SET SERVEROUTPUT ON;
+    BEGIN
+    IF (czy_czesto_lapana('Sum')) THEN
+    DBMS_OUTPUT.PUT_LINE('tak');
+    ELSE
+    DBMS_OUTPUT.PUT_LINE('nie');
+    END IF;
+    END;
+------------------------------------------------------------------------------------------------------------------------------------------------
+// TYPY OBIEKTOWE
+
+CREATE TYPE t_osoba AS OBJECT (
+nazwisko VARCHAR(50),
+data_urodzenia DATE,
+pensja NUMBER,
+member FUNCTION ile_lat RETURN INTEGER );
+
+/
+CREATE OR REPLACE TYPE BODY t_osoba IS
+member FUNCTION ile_lat RETURN INTEGER
+IS
+BEGIN
+  RETURN floor(MONTHS_BETWEEN(SYSDATE, SELF.data_urodzenia)) / 12;
+END;
+END;
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+// NA KOLO
+Formaty dat: insert into x values(99, to_date('1998/05/31:12:00:00AM', 'yyyy/mm/dd:hh:mi:ssam'));
+SELECT kl_id  FROM zamowienia WHERE data_zam = BETWEEN TO_DATE('2015-02-01', 'yyyy-mm-dd') AND TO_DATE('2015-03-01', 'yyyy-mm-dd');
+SELECT kl_id FROM zamowienia WHERE EXTRACT(Year FROM data_zam)= 2015 AND EXTRACT(Month FROM data_zam)=2;
+select to_char(sysdate, 'Dy DD-Mon-YYYY HH24:MI:SS') as "Current Time" FROM dual;
+EXCEPTION WHEN NO_DATA_FOUND THEN raise_application_error(-20010, 'Z³y identyfikator zespo³u!');
+
+CREATE PROCEDURE WstawPracownika
+(p_id_prac IN NUMBER, p_nazwisko IN VARCHAR2,
+p_imie IN VARCHAR2, p_nazwa_zespolu IN VARCHAR2
+DEFAULT null) IS
+v_id_zesp zespoly.id_zesp%TYPE;
+BEGIN
+IF p_nazwa_zespolu is not null THEN
+SELECT id_zesp INTO v_id_zesp FROM zespoly
+WHERE nazwa = p_nazwa_zespolu;
+END IF;
+INSERT INTO pracownicy(id_prac, imie, nazwisko, id_zesp)
+VALUES (p_id_prac, p_imie, p_nazwisko, v_id_zesp);
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+raise_application_error (-20001, 'Z³a nazwa zespo³u!');
+END;
+
+v_liczba NUMBER(10):=&Podaj_id_studenta;
+
+
